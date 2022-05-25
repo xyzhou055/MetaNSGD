@@ -279,7 +279,7 @@ for meta_iteration in tqdm.trange(args.start_meta_iteration, args.meta_iteration
             average_acc = 0
             average_loss = 0
             average_accs = []
-            for i in range(100):
+            for i in range(400):
                 train, test = meta_dataset.get_random_task_split(args.classes, train_K=args.shots, test_K=1)  # is that 5 ok?
                 train_iter = make_infinite(DataLoader(train, args.batch, shuffle=True))
                 test_iter = make_infinite(DataLoader(test, args.classes, shuffle=True))
@@ -293,10 +293,10 @@ for meta_iteration in tqdm.trange(args.start_meta_iteration, args.meta_iteration
                 average_accs.append(meta_accuracy)
                 average_loss += meta_loss
 
-            average_acc /= 100
-            average_loss /= 100
+            average_acc /= 400
+            average_loss /= 400
             std = np.std(average_accs, 0)
-            ci95 = 1.96*std/np.sqrt(100)
+            ci95 = 1.96*std/np.sqrt(400)
             # (Logging)
             loss_ = '{}_loss'.format(mode)
             accuracy_ = '{}_accuracy'.format(mode)
