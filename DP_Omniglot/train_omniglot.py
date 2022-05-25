@@ -39,7 +39,7 @@ def Variable_(tensor, *args_, **kwargs):
     return variable
 
 # Parsing
-parser = argparse.ArgumentParser('Train reptile on omniglot')
+parser = argparse.ArgumentParser('Train reptile onomniglot')
 
 # Mode
 parser.add_argument('logdir', help='Folder to store everything/load')
@@ -55,6 +55,8 @@ parser.add_argument('--test-iterations', default=50, type=int, help='number of b
 parser.add_argument('--batch', default=10, type=int, help='minibatch size in base task')
 parser.add_argument('--meta-lr', default=1., type=float, help='meta learning rate')
 parser.add_argument('--lr', default=1e-3, type=float, help='base learning rate')
+parser.add_argument('--meta-batch', default=25, type=int, help='meta batch size')
+parser.add_argument('--noise-multiplier', default=0.423, type=float, help='multiplier')
 
 # - General params
 parser.add_argument('--validation', default=0.1, type=float, help='Percentage of validation')
@@ -122,7 +124,6 @@ for i in range(40000):
         img_indices.append(np.random.choice(20, args.train_shots + 1, replace=False))
     training_dataset.append((character_indices, img_indices))
 #---------------------------------------------------------------------------------------------------------
-
 
 
 # Loss
@@ -241,7 +242,7 @@ for meta_iteration in tqdm.trange(args.start_meta_iteration, args.meta_iteration
     
     # Clone model
     gradient_sum = []
-    for i in range(25):
+    for i in range(args.meta_batch):
         net.load_state_dict(meta_net.state_dict())
         
         task_idx = np.random.choice(len(training_dataset), 1)[0]
@@ -257,10 +258,12 @@ for meta_iteration in tqdm.trange(args.start_meta_iteration, args.meta_iteration
         gradient = gradient_clipping(gradient, 0.5)
 
         gradient_sum = var_add(gradient_sum, gradient)
-    gradient_sum = var_scale(gradient_sum, 0.04)
-
+    gradient_sum = var_scale(gradient_sum, 1.0/args.meta_batch)
+   
     # Update slow net
-    meta_net.point_grad_to(gradient_sum)
+    noise_std = 0.5 * args.noise_multiplier/args.meta_batch
+   
+    meta_net.point_grad_to(gradient_sum, noise_std)
     meta_optimizer.step()
 
     

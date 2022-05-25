@@ -8,7 +8,7 @@ class ReptileModel(nn.Module):
     def __init__(self):
         nn.Module.__init__(self)
 
-    def point_grad_to(self, target):
+    def point_grad_to(self, target, noise_std):
         '''
         Set .grad attribute of each parameter to be proportional
         to the difference between self and target
@@ -21,9 +21,8 @@ class ReptileModel(nn.Module):
                     p.grad = Variable(torch.zeros(p.size()))
             p.grad.data.zero_()  # not sure this is required
             p.grad.data.add_(target_p)
-            # noise_multiplier = 0.423
-            # noise = torch.normal(torch.zeros_like(p.data), noise_multiplier*0.5*0.04)
-            # p.grad.data.add_(noise)
+            noise = torch.normal(torch.zeros_like(p.data), noise_std)
+            p.grad.data.add_(noise)
 
     def is_cuda(self):
         return next(self.parameters()).is_cuda

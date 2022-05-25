@@ -55,6 +55,9 @@ parser.add_argument('--test-iterations', default=50, type=int, help='number of b
 parser.add_argument('--batch', default=10, type=int, help='minibatch size in base task')
 parser.add_argument('--meta-lr', default=1., type=float, help='meta learning rate')
 parser.add_argument('--lr', default=1e-3, type=float, help='base learning rate')
+parser.add_argument('--meta-batch', default=25, type=int, help='meta batch size')
+parser.add_argument('--noise-multiplier', default=0.423, type=float, help='multiplier')
+parser.add_argument('--q', default=2, type=int, help='number of meta models')
 
 # - General params
 parser.add_argument('--validation', default=0.1, type=float, help='Percentage of validation')
@@ -211,7 +214,7 @@ def set_learning_rate(optimizer, lr):
 
 
 # Build model, optimizer, and set states
-q = 2
+q = args.q
 meta_nets = []
 for _ in range(q):
     meta_nets.append(OmniglotModel(args.classes))
@@ -263,8 +266,10 @@ for meta_iteration in tqdm.trange(args.start_meta_iteration, args.meta_iteration
         set_learning_rate(meta_optimizer, meta_lr)
 
     # Clone model
-    gradient_sums = [[], []]
-    for i in range(25):
+    gradient_sums = []
+    for i in range(q):
+        gradient_sums.append([])
+    for i in range(args.meta_batch):
         task_idx = np.random.choice(len(training_dataset), 1)[0]
         dataset_idx, character_indices, img_indices = training_dataset[task_idx]
         train, _ = meta_train[dataset_idx].get_task_split(character_indices, img_indices, args.train_shots, 1)
@@ -299,11 +304,12 @@ for meta_iteration in tqdm.trange(args.start_meta_iteration, args.meta_iteration
         if not gradient_sums[i]:
             gradient_sums[i] = [torch.zeros_like(para) for para in net.parameters()]
         else:
-            gradient_sums[i] = var_scale(gradient_sums[i], 0.04)
+            gradient_sums[i] = var_scale(gradient_sums[i], 1.0/args.meta_batch)
 
     # Update slow net
+    noise_std = 0.5 * args.noise_multiplier/args.meta_batch
     for meta_net, gradient_sum, meta_optimizer in zip(meta_nets, gradient_sums, meta_optimizers):
-        meta_net.point_grad_to(gradient_sum)
+        meta_net.point_grad_to(gradient_sum, noise_std)
         meta_optimizer.step()
 
     # Meta-Evaluation
