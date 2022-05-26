@@ -116,8 +116,6 @@ meta_test = [meta_test_ogt,  meta_test_ogt]
 print('Omniglot Meta-Train characters', len(meta_train_ogt))
 print('Omniglot Meta-Test characters', len(meta_test_ogt))
 
-print('Triple mnist Meta-Train characters', len(meta_train_tm))
-print('Triple mnist Meta-Test characters', len(meta_test_tm))
 
 # character_indices = np.random.choice(len(meta_train), args.classes, replace=False)
 # img_indices = []
