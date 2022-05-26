@@ -104,10 +104,6 @@ omniglot = MetaOmniglotFolder(args.input, size=(28, 28), cache=ImageCache(),
                               transform_label=transform_label)
 meta_train, meta_test = split_omniglot(omniglot, args.validation)
 
-
-print('Meta-Train characters', len(meta_train))
-print('Meta-Test characters', len(meta_test))
-
 # character_indices = np.random.choice(len(meta_train), args.classes, replace=False)
 # img_indices = []
 # for i in range(len(character_indices)):
