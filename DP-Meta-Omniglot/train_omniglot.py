@@ -73,25 +73,6 @@ args_filename = os.path.join(args.logdir, 'args.json')
 run_dir = args.logdir
 check_dir = os.path.join(run_dir, 'checkpoint')
 
-# By default, continue training
-# Check if args.json exists
-# if os.path.exists(args_filename):
-#     print('Attempting to resume training. (Delete {} to start over)'.format(args.logdir))
-#     # Resuming training is incompatible with other checkpoint
-#     # than the last one in logdir
-#     assert args.checkpoint == '', 'Cannot load other checkpoint when resuming training.'
-#     # Attempt to find checkpoint in logdir
-#     args.checkpoint = args.logdir
-# else:
-#     print('No previous training found. Starting fresh.')
-#     # Otherwise, initialize folders
-#     if not os.path.exists(run_dir):
-#         os.makedirs(run_dir)
-#     if not os.path.exists(check_dir):
-#         os.makedirs(check_dir)
-#     # Write args to args.json
-#     with open(args_filename, 'wb') as fp:
-#         json.dump(vars(bytes(args)), fp, indent=4)
 
 
 # Create tensorboard logger
@@ -103,13 +84,6 @@ omniglot = MetaOmniglotFolder(args.input, size=(28, 28), cache=ImageCache(),
                               transform_image=transform_image,
                               transform_label=transform_label)
 meta_train, meta_test = split_omniglot(omniglot, args.validation)
-
-# character_indices = np.random.choice(len(meta_train), args.classes, replace=False)
-# img_indices = []
-# for i in range(len(character_indices)):
-#     img_indices.append(np.random.choice(20, args.train_shots + 1))
-
-# train_data, _ = meta_train.get_task_split(character_indices, img_indices, args.train_shots, 1)
 
 #-----------Generate the dataset-------------------------------------------------------------------------------------------
 training_dataset = []
@@ -315,15 +289,3 @@ for meta_iteration in tqdm.trange(args.start_meta_iteration, args.meta_iteration
             logger.add_scalar(accuracy_, meta_accuracy, meta_iteration)
             logger.add_scalar(meta_lr_, meta_lr, meta_iteration)
 
-    # if meta_iteration % args.check_every == 0 and not (args.checkpoint and meta_iteration == args.start_meta_iteration):
-    #     # Make a checkpoint
-    #     checkpoint = {
-    #         'meta_net': meta_net.state_dict(),
-    #         'meta_optimizer': meta_optimizer.state_dict(),
-    #         'optimizer': state,
-    #         'meta_iteration': meta_iteration,
-    #         'info': info
-    #     }
-    #     checkpoint_path = os.path.join(check_dir, 'check-{}.pth'.format(meta_iteration))
-    #     torch.save(checkpoint, checkpoint_path)
-    #     print('Saved checkpoint to', checkpoint_path)
