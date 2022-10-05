@@ -113,13 +113,6 @@ meta_train = [meta_train_ogt, meta_train_ogt]
 meta_test = [meta_test_ogt,  meta_test_ogt]
 
 
-# character_indices = np.random.choice(len(meta_train), args.classes, replace=False)
-# img_indices = []
-# for i in range(len(character_indices)):
-#     img_indices.append(np.random.choice(20, args.train_shots + 1))
-
-# train_data, _ = meta_train.get_task_split(character_indices, img_indices, args.train_shots, 1)
-
 #-----------Generate the dataset-------------------------------------------------------------------------------------------
 training_dataset = []
 for i in range(50000):
@@ -223,32 +216,6 @@ info = {}
 state = None
 
 
-# checkpoint is directory -> Find last model or '' if does not exist
-# if os.path.isdir(args.checkpoint):
-#     latest_checkpoint = find_latest_file(check_dir)
-#     if latest_checkpoint:
-#         print('Latest checkpoint found:', latest_checkpoint)
-#         args.checkpoint = os.path.join(check_dir, latest_checkpoint)
-#     else:
-#         args.checkpoint = ''
-
-# # Start fresh
-# if args.checkpoint == '':
-#     print('No checkpoint. Starting fresh')
-
-# Load file
-# elif os.path.isfile(args.checkpoint):
-#     print('Attempting to load checkpoint', args.checkpoint)
-#     checkpoint = torch.load(args.checkpoint)
-#     meta_net.load_state_dict(checkpoint['meta_net'])
-#     meta_optimizer.load_state_dict(checkpoint['meta_optimizer'])
-#     state = checkpoint['optimizer']
-#     args.start_meta_iteration = checkpoint['meta_iteration']
-#     info = checkpoint['info']
-# else:
-#     raise AttributeError('Bad checkpoint. Delete logdir folder to start over.')
-
-
 number_of_first_model = 0
 number_of_second_model = 0
 # Main loop
@@ -274,8 +241,6 @@ for meta_iteration in tqdm.trange(args.start_meta_iteration, args.meta_iteration
             net = meta_net.clone()
             optimizer = get_optimizer(net)
 
-            # Sample base task from Meta-Train
-            #train = meta_train.get_random_task(args.classes, args.train_shots or args.shots)
 
             # Update fast net
             meta_paras = [copy.deepcopy(para) for para in meta_net.parameters()]
@@ -290,7 +255,7 @@ for meta_iteration in tqdm.trange(args.start_meta_iteration, args.meta_iteration
         else:
             number_of_second_model += 1
         gradient = var_substract(meta_net.parameters(), best_para)
-        #gradient = gradient_clipping(gradient, 0.5)
+        gradient = gradient_clipping(gradient, 0.5)
     
         gradient_sums[best_idx] = var_add(gradient_sums[best_idx], gradient)
     
@@ -372,16 +337,3 @@ for meta_iteration in tqdm.trange(args.start_meta_iteration, args.meta_iteration
             logger.add_scalar(loss_, meta_loss, meta_iteration)
             logger.add_scalar(accuracy_, meta_accuracy, meta_iteration)
             logger.add_scalar(meta_lr_, meta_lr, meta_iteration)
-
-    if meta_iteration % args.check_every == 0 and not (args.checkpoint and meta_iteration == args.start_meta_iteration):
-        # Make a checkpoint
-        checkpoint = {
-            'meta_net': meta_net.state_dict(),
-            'meta_optimizer': meta_optimizer.state_dict(),
-            'optimizer': state,
-            'meta_iteration': meta_iteration,
-            'info': info
-        }
-        checkpoint_path = os.path.join(check_dir, 'check-{}.pth'.format(meta_iteration))
-        torch.save(checkpoint, checkpoint_path)
-        print('Saved checkpoint to', checkpoint_path)
