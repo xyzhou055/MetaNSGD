@@ -73,29 +73,6 @@ args_filename = os.path.join(args.logdir, 'args.json')
 run_dir = args.logdir
 check_dir = os.path.join(run_dir, 'checkpoint')
 
-# By default, continue training
-# Check if args.json exists
-# if os.path.exists(args_filename):
-#     print('Attempting to resume training. (Delete {} to start over)'.format(args.logdir))
-#     # Resuming training is incompatible with other checkpoint
-#     # than the last one in logdir
-#     assert args.checkpoint == '', 'Cannot load other checkpoint when resuming training.'
-#     # Attempt to find checkpoint in logdir
-#     args.checkpoint = args.logdir
-# else:
-#     print('No previous training found. Starting fresh.')
-#     # Otherwise, initialize folders
-#     if not os.path.exists(run_dir):
-#         os.makedirs(run_dir)
-#     if not os.path.exists(check_dir):
-#         os.makedirs(check_dir)
-#     # Write args to args.json
-#     with open(args_filename, 'wb') as fp:
-#         json.dump(vars(bytes(args)), fp, indent=4)
-
-
-# Create tensorboard logger
-# logger = SummaryWriter(run_dir)
 
 # Load data
 # Resize is done by the MetaDataset because the result can be easily cached
@@ -203,30 +180,6 @@ state = None
 net = meta_net.clone()
 optimizer = get_optimizer(net)
 
-# checkpoint is directory -> Find last model or '' if does not exist
-# if os.path.isdir(args.checkpoint):
-#     latest_checkpoint = find_latest_file(check_dir)
-#     if latest_checkpoint:
-#         print('Latest checkpoint found:', latest_checkpoint)
-#         args.checkpoint = os.path.join(check_dir, latest_checkpoint)
-#     else:
-#         args.checkpoint = ''
-
-# # Start fresh
-# if args.checkpoint == '':
-#     print('No checkpoint. Starting fresh')
-
-# # Load file
-# elif os.path.isfile(args.checkpoint):
-#     print('Attempting to load checkpoint', args.checkpoint)
-#     checkpoint = torch.load(args.checkpoint)
-#     meta_net.load_state_dict(checkpoint['meta_net'])
-#     meta_optimizer.load_state_dict(checkpoint['meta_optimizer'])
-#     state = checkpoint['optimizer']
-#     args.start_meta_iteration = checkpoint['meta_iteration']
-#     info = checkpoint['info']
-# else:
-#     raise AttributeError('Bad checkpoint. Delete logdir folder to start over.')
 
 # Main loop
 acc_list=  []
@@ -295,19 +248,6 @@ for meta_iteration in tqdm.trange(args.start_meta_iteration, args.meta_iteration
             average_loss /= 400
             std = np.std(average_accs, 0)
             ci95 = 1.96*std/np.sqrt(400)
-            # (Logging)
-            # loss_ = '{}_loss'.format(mode)
-            # accuracy_ = '{}_accuracy'.format(mode)
-            # ci95_ ='{}_ci95'.format(mode)
-            # meta_lr_ = 'meta_lr'
-            # info.setdefault(loss_, {})
-            # info.setdefault(accuracy_, {})
-            # info.setdefault(meta_lr_, {})
-            # info.setdefault(ci95_, {})
-            # info[loss_][meta_iteration] = average_loss
-            # info[accuracy_][meta_iteration] = average_acc
-            # info[meta_lr_][meta_iteration] = meta_lr
-            # info[ci95_][meta_iteration] = ci95
             acc_list.append(average_acc)
             loss_list.append(average_loss)
             np.save("acc.npy", np.array(acc_list))
@@ -317,19 +257,6 @@ for meta_iteration in tqdm.trange(args.start_meta_iteration, args.meta_iteration
             print('metaloss', average_loss)
             print('accuracy', average_acc)
             print('ci95', ci95)
-            # logger.add_scalar(loss_, meta_loss, meta_iteration)
-            # logger.add_scalar(accuracy_, meta_accuracy, meta_iteration)
-            # logger.add_scalar(meta_lr_, meta_lr, meta_iteration)
+            
 
-    # if meta_iteration % args.check_every == 0 and not (args.checkpoint and meta_iteration == args.start_meta_iteration):
-    #     # Make a checkpoint
-    #     checkpoint = {
-    #         'meta_net': meta_net.state_dict(),
-    #         'meta_optimizer': meta_optimizer.state_dict(),
-    #         'optimizer': state,
-    #         'meta_iteration': meta_iteration,
-    #         'info': info
-    #     }
-    #     checkpoint_path = os.path.join(check_dir, 'check-{}.pth'.format(meta_iteration))
-    #     torch.save(checkpoint, checkpoint_path)
-    #     print('Saved checkpoint to', checkpoint_path)
+
