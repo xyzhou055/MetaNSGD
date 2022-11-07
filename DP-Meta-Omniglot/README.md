@@ -22,7 +22,7 @@ Create a folder `omniglot` under the same directory of code files; unzip and mer
 
 For single cluster training, run with the following command:
 ```bash
-python train_omniglot.py log/o55 --classes 5 --noise-multiplier 0.423 --meta-batch 25 --validate-every 5000 --shots 5 --train-shots 10 --meta-iterations 20000 --iterations 5 --test-iterations 50 --batch 10 --meta-lr 0.1 --lr 0.001
+python train_omniglot.py log/o55 --classes 5 --noise-multiplier 0.423 --meta-batch 25 --validate-every 5000 --shots 5 --train-shots 10 --meta-iterations 20000 --iterations 10 --test-iterations 50 --batch 10 --meta-lr 0.1 --lr 0.001
 ```
 
 For multi cluster training, run with the following command:
